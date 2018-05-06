@@ -4,6 +4,7 @@ from telegram.ext import CommandHandler
 
 logger = logging.getLogger(__name__)
 
+
 class Bot(object):
     def __init__(self, dispatcher):
         dispatcher.add_handler(CommandHandler(
