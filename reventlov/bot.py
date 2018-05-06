@@ -14,6 +14,7 @@ class Bot(object):
         self.updater = Updater(token=os.getenv('TELEGRAM_BOT_TOKEN'))
         self.dispatcher.add_handler(CommandHandler('start', self.start))
         self.dispatcher.add_handler(CommandHandler('help', self.help))
+        self.dispatcher.add_handler(CommandHandler('settings', self.settings))
         self.plugins = get_plugins(self.dispatcher)
 
     @property
@@ -60,6 +61,16 @@ class Bot(object):
             msg = '{}\n{}'.format(msg, handler_msg)
         return msg.replace('_', '\_')
 
+    @property
+    def loaded_plugins(self):
+        return ','.join([name.split('.')[-1] for name in self.plugins.keys()])
+
+    @property
+    def settings_message(self):
+        msg = 'Here is a list of my settings:'
+        msg = '{}\n- `loaded_plugins`: {}'.format(msg, self.loaded_plugins)
+        return msg
+
     def start(self, bot, update):
         '''
         Greet and list of features I am providing.
@@ -83,6 +94,18 @@ class Bot(object):
         bot.send_message(
             chat_id=update.message.chat_id,
             text=self.help_message,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+    def settings(self, bot, update):
+        '''
+        List my settings.
+
+        These settings can include loaded plugins' settings.
+        '''
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text=self.settings_message,
             parse_mode=ParseMode.MARKDOWN,
         )
 
