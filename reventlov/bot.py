@@ -3,6 +3,8 @@ import logging
 
 from telegram.ext import Updater, CommandHandler
 
+from reventlov.plugins import get_plugins
+
 logger = logging.getLogger(__name__)
 
 
@@ -11,6 +13,7 @@ class Bot(object):
         self.updater = Updater(token=os.getenv("TELEGRAM_BOT_TOKEN"))
         self.dispatcher.add_handler(CommandHandler("start", self.start))
         self.dispatcher.add_handler(CommandHandler("help", self.help))
+        self.plugins = get_plugins(self.dispatcher)
 
     @property
     def username(self):
