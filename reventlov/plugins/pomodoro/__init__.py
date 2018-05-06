@@ -29,6 +29,9 @@ class Bot(object):
         bot.send_message(job.context['chat_id'], text=job.context['text'])
 
     def set_timer(self, bot, update, args, job_queue, chat_data):
+        '''
+        `seconds [message...]` Set alarm to fire in `seconds`.
+        '''
         chat_id = update.message.chat_id
         try:
             due = int(args[0])
@@ -44,9 +47,12 @@ class Bot(object):
             chat_data['job'] = job
             update.message.reply_text('Timer successfully set!')
         except (IndexError, ValueError):
-            update.message.reply_text('Usage: /set <seconds> <message...>')
+            update.message.reply_markdown('Usage: `/set seconds [message...]`')
 
     def unset_timer(self, bot, update, chat_data):
+        '''
+        Unset last alarm set.
+        '''
         if 'job' not in chat_data:
             update.message.reply_text('You have no active timer')
             return
