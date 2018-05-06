@@ -21,6 +21,10 @@ class Bot(object):
         self.version = '0.0.1'
         logger.info("Pomodoro plugin v{} loaded".format(self.version))
 
+    @property
+    def feature_desc(self):
+        return "I can manage pomodoro alarms for you"
+
     def alarm(self, bot, job):
         bot.send_message(job.context['chat_id'], text=job.context['text'])
 
