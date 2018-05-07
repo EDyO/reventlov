@@ -62,13 +62,22 @@ class Bot(object):
         return msg.replace('_', '\_')
 
     @property
-    def loaded_plugins(self):
-        return ','.join([name.split('.')[-1] for name in self.plugins.keys()])
+    def disabled_plugins(self):
+        return ', '.join(sorted(
+            [name for name in self.plugins if self.plugins[name] is None]
+        ))
+
+    @property
+    def enabled_plugins(self):
+        return ', '.join(sorted(
+            [name for name in self.plugins if self.plugins[name]]
+        ))
 
     @property
     def settings_message(self):
         msg = 'Here is a list of my settings:'
-        msg = '{}\n- `loaded_plugins`: {}'.format(msg, self.loaded_plugins)
+        msg = '{}\n- `enabled_plugins`: {}'.format(msg, self.enabled_plugins)
+        msg = '{}\n- `disabled_plugins`: {}'.format(msg, self.disabled_plugins)
         return msg
 
     def start(self, bot, update):
