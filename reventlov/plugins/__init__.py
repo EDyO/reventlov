@@ -34,6 +34,6 @@ def get_plugins(dispatcher):
                 plugins[name] = plugins[name].Bot(dispatcher)
             else:
                 logger.warn(
-                    "Plugin {} does not provide Bot class".format(name)
+                    f'Plugin {name} does not provide Bot class'
                 )
     return plugins

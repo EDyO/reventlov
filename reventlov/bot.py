@@ -35,15 +35,13 @@ class Bot(object):
 
     @property
     def start_message(self):
-        msg = 'I am {} (@{})'.format(self.name, self.username)
+        msg = f'I am {self.name} (@{self.username})'
         features_msg = ''
         for plugin in self.plugins:
-            features_msg = '{}\n- {}'.format(
-                features_msg,
-                self.plugins[plugin].feature_desc,
-            )
+            feature_desc = self.plugins[plugin].feature_desc
+            features_msg = f'{features_msg}\n- {feature_desc}'
         if len(features_msg) > 0:
-            msg = '{}{}'.format(msg, features_msg)
+            msg = f'{msg}{features_msg}'
         return msg
 
     @property
@@ -52,14 +50,13 @@ class Bot(object):
         for handler in self.dispatcher.handlers[0]:
             if handler.__class__ == CommandHandler:
                 help_msg = handler.callback.__doc__ or '\nUndefined command'
-                handler_msg = '- /{}: {}'.format(
-                    handler.command[0],
-                    help_msg.splitlines()[1].strip()
-                )
+                help_header = help_msg.splitlines()[1].strip()
+                cmd = handler.command[0]
+                handler_msg = f'- /{cmd}: {help_header}'
             else:
                 handler_msg = 'Undefined message'
-            msg = '{}\n{}'.format(msg, handler_msg)
-        return msg.replace('_', '\_')
+            msg = f'{msg}\n{handler_msg}'.replace('_', '\_')
+        return msg
 
     @property
     def disabled_plugins(self):
@@ -76,8 +73,8 @@ class Bot(object):
     @property
     def settings_message(self):
         msg = 'Here is a list of my settings:'
-        msg = '{}\n- `enabled_plugins`: {}'.format(msg, self.enabled_plugins)
-        msg = '{}\n- `disabled_plugins`: {}'.format(msg, self.disabled_plugins)
+        msg = f'{msg}\n- `enabled_plugins`: {self.enabled_plugins}'
+        msg = f'{msg}\n- `disabled_plugins`: {self.disabled_plugins}'
         return msg
 
     def start(self, bot, update):
@@ -119,5 +116,5 @@ class Bot(object):
         )
 
     def run(self):
-        logger.info('I am {} (@{})'.format(self.name, self.username))
+        logger.info(f'I am {self.name} (@{self.username})')
         self.updater.start_polling()
