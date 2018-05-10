@@ -13,18 +13,27 @@ def iter_namespaces():
     )
 
 
-plugins = {
-    name: importlib.import_module(name)
-    for finder, name, ispkg
-    in iter_namespaces()
-}
+def find_plugins():
+    excluded = (os.getenv('REVENTLOV_DISABLED_PLUGINS') or '').split(',')
+    plugins = {
+        name.split('.')[-1]: importlib.import_module(name)
+        for finder, name, ispkg
+        in iter_namespaces()
+        if name.split('.')[-1] not in excluded
+    }
+    for plugin in excluded:
+        plugins[plugin] = None
+    return plugins
 
 
 def get_plugins(dispatcher):
-    plugin_dict = {}
+    plugins = find_plugins()
     for name in plugins:
-        if 'Bot' in dir(plugins[name]):
-            plugin_dict[name] = plugins[name].Bot(dispatcher)
-        else:
-            logger.warn("Plugin {} does not provide Bot class".format(name))
-    return plugin_dict
+        if plugins[name] is not None:
+            if 'Bot' in dir(plugins[name]):
+                plugins[name] = plugins[name].Bot(dispatcher)
+            else:
+                logger.warn(
+                    "Plugin {} does not provide Bot class".format(name)
+                )
+    return plugins
