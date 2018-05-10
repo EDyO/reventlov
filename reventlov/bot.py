@@ -1,10 +1,11 @@
+from future.utils import iteritems
 import os
 import logging
 
 from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler
 
-from reventlov.plugins import get_plugins
+from reventlov.plugins import BotPlugins
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,8 @@ class Bot(object):
         self.updater = Updater(token=os.getenv('TELEGRAM_BOT_TOKEN'))
         self.dispatcher.add_handler(CommandHandler('start', self.start))
         self.dispatcher.add_handler(CommandHandler('help', self.help))
-        self.plugins = get_plugins(self.dispatcher)
+        self.dispatcher.add_handler(CommandHandler('settings', self.settings))
+        self.plugins = BotPlugins(self.dispatcher)
 
     @property
     def name(self):
@@ -34,35 +36,34 @@ class Bot(object):
 
     @property
     def start_message(self):
-        msg = 'I am {} (@{})'.format(self.name, self.username)
+        msg = f'I am {self.name} (@{self.username})'
         features_msg = ''
-        for plugin in self.plugins:
-            features_msg = '{}\n- {}'.format(
-                features_msg,
-                self.plugins[plugin].feature_desc,
-            )
-        if len(features_msg) > 0:
-            msg = '{}{}'.format(msg, features_msg)
+        for feature_desc in self.plugins.feature_descs:
+            features_msg = f'{features_msg}\n- {feature_desc}'
+        msg += features_msg
         return msg
 
     @property
     def help_message(self):
         msg = 'I am offering the following:'
-        for handler in self.dispatcher.handlers[0]:
-            if handler.__class__ == CommandHandler:
-                help_msg = handler.callback.__doc__ or '\nUndefined command'
-                handler_msg = '- /{}: {}'.format(
-                    handler.command[0],
-                    help_msg.splitlines()[1].strip()
-                )
-            else:
-                handler_msg = 'Undefined message'
-            msg = '{}\n{}'.format(msg, handler_msg)
-        return msg.replace('_', '\_')
+        msg += f'\n-/start: Greeting and list of features provided.'
+        msg += f'\n-/help: Help about my features.'
+        msg += f'\n-/settings: View my settings.'
+        for command, message in iteritems(self.plugins.command_descs):
+            msg = f'{msg}\n-{command}: {message}'
+        return msg
+
+    @property
+    def disabled_plugins(self):
+        return ', '.join(sorted(self.plugins.disabled_plugins))
+
+    @property
+    def enabled_plugins(self):
+        return ', '.join(sorted(self.plugins.enabled_plugins))
 
     def start(self, bot, update):
         '''
-        Greet and list of features I am providing.
+        Greeting and list of features I am providing.
 
         The list of features are including the feature descriptions of all
         the plugins loaded.
@@ -86,6 +87,21 @@ class Bot(object):
             parse_mode=ParseMode.MARKDOWN,
         )
 
+    def settings(self, bot, update):
+        '''
+        View my settings.
+
+        These settings can include loaded plugins' settings.
+        '''
+        msg = 'Here is a list of my settings:'
+        msg = f'{msg}\n- `enabled_plugins`: {self.enabled_plugins}'
+        msg = f'{msg}\n- `disabled_plugins`: {self.disabled_plugins}'
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text=msg,
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
     def run(self):
-        logger.info('I am {} (@{})'.format(self.name, self.username))
+        logger.info(f'I am {self.name} (@{self.username})')
         self.updater.start_polling()
