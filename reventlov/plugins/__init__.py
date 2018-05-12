@@ -62,6 +62,12 @@ class BotPlugins(object):
             if self.plugins[plugin_name].__doc__ is not None
         ]
 
+    def enable(self, plugin_name):
+        module_name = f'reventlov.plugins.{plugin_name}'
+        self.disabled_plugins.remove(plugin_name)
+        bot = self.modules[module_name].Bot(self.dispatcher)
+        self.plugins[plugin_name] = bot
+
     def load_plugins(self):
         for name in self.modules:
             plugin_name = name.split('.')[-1]

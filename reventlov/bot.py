@@ -16,6 +16,11 @@ class Bot(object):
         self.dispatcher.add_handler(CommandHandler('start', self.start))
         self.dispatcher.add_handler(CommandHandler('help', self.help))
         self.dispatcher.add_handler(CommandHandler('settings', self.settings))
+        self.dispatcher.add_handler(CommandHandler(
+            'enable_plugin',
+            self.enable_plugin,
+            pass_args=True,
+        ))
         self.plugins = BotPlugins(self.dispatcher)
 
     @property
@@ -49,6 +54,7 @@ class Bot(object):
         msg += f'\n-/start: Greeting and list of features provided.'
         msg += f'\n-/help: Help about my features.'
         msg += f'\n-/settings: View my settings.'
+        msg += f'\n-/enable\_plugin: `plugin_name` Enable `plugin_name`'
         for command, message in iteritems(self.plugins.command_descs):
             msg = f'{msg}\n-{command}: {message}'
         return msg
@@ -100,6 +106,26 @@ class Bot(object):
             chat_id=update.message.chat_id,
             text=msg,
             parse_mode=ParseMode.MARKDOWN,
+        )
+
+    def enable_plugin(self, bot, update, args):
+        '''
+        Enable a disabled plugin
+
+        Enable one of the disabled plugins.
+        '''
+        msg = ''
+        if len(args) == 1:
+            if args[0] in self.disabled_plugins:
+                self.plugins.enable(args[0])
+                msg = f'Plugin {args[0]} enabled'
+            else:
+                msg = f'Plugin {args[0]} is not disabled'
+        else:
+            msg = 'You must specify which plugin you want to enable'
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text=msg,
         )
 
     def run(self):
