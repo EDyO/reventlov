@@ -62,6 +62,10 @@ class BotPlugins(object):
             if self.plugins[plugin_name].__doc__ is not None
         ]
 
+    def disable(self, plugin_name):
+        del self.plugins[plugin_name]
+        self.disabled_plugins.append(plugin_name)
+
     def enable(self, plugin_name):
         module_name = f'reventlov.plugins.{plugin_name}'
         self.disabled_plugins.remove(plugin_name)
