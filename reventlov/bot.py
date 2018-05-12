@@ -4,7 +4,7 @@ import logging
 from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler
 
-from reventlov.plugins import get_plugins
+from reventlov.plugins import get_plugins, add_plugin
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +15,11 @@ class Bot(object):
         self.dispatcher.add_handler(CommandHandler('start', self.start))
         self.dispatcher.add_handler(CommandHandler('help', self.help))
         self.dispatcher.add_handler(CommandHandler('settings', self.settings))
+        self.dispatcher.add_handler(CommandHandler(
+            'enable_plugin',
+            self.enable_plugin,
+            pass_args=True,
+        ))
         self.plugins = get_plugins(self.dispatcher)
 
     @property
@@ -55,7 +60,8 @@ class Bot(object):
                 handler_msg = f'- /{cmd}: {help_header}'
             else:
                 handler_msg = 'Undefined message'
-            msg = f'{msg}\n{handler_msg}'.replace('_', '\_')
+            msg = f'{msg}\n{handler_msg}'
+        msg = msg.replace('_', '\_')
         return msg
 
     @property
@@ -114,6 +120,24 @@ class Bot(object):
             text=self.settings_message,
             parse_mode=ParseMode.MARKDOWN,
         )
+
+    def enable_plugin(self, bot, update, args):
+        '''
+        Enable currently disabled plugin.
+        '''
+        if len(args) > 0:
+            if args[0] in self.disabled_plugins:
+                self.plugins = add_plugin(args[0], self.dispatcher)
+            else:
+                bot.send_message(
+                    chat_id=update.message.chat_id,
+                    text=f'Plugin {args[0]} is not disabled',
+                )
+        else:
+            bot.send_message(
+                chat_id=update.message.chat_id,
+                text='You must specify the plugin name',
+            )
 
     def run(self):
         logger.info(f'I am {self.name} (@{self.username})')
