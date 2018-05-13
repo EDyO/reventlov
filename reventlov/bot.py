@@ -5,7 +5,7 @@ import logging
 from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler
 
-from reventlov.plugins import BotPlugins
+from reventlov.bot_plugins import BotPlugins
 
 logger = logging.getLogger(__name__)
 
