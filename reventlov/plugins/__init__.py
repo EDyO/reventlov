@@ -28,14 +28,23 @@ class BotPlugins(object):
         self.dispatcher = dispatcher
         self.modules = import_plugin_modules()
         self.plugins = {}
+        self.disabled_plugins = []
         self.load_plugins()
 
     @property
     def disabled_plugins(self):
-        disabled_plugins = os.getenv('REVENTLOV_DISABLED_PLUGINS')
-        if disabled_plugins is None:
-            return []
-        return disabled_plugins.split(',')
+        return self.__disabled_plugins
+
+    @disabled_plugins.setter
+    def disabled_plugins(self, disabled_plugins):
+        if len(disabled_plugins) == 0:
+            disabled_plugins = os.getenv('REVENTLOV_DISABLED_PLUGINS')
+            if disabled_plugins is None:
+                self.__disabled_plugins = []
+            else:
+                self.__disabled_plugins = disabled_plugins.split(',')
+        else:
+            self.__disabled_plugins = disabled_plugins
 
     @property
     def enabled_plugins(self):
@@ -68,7 +77,7 @@ class BotPlugins(object):
 
     def enable(self, plugin_name):
         module_name = f'reventlov.plugins.{plugin_name}'
-        self.disabled_plugins.remove(plugin_name)
+        del self.disabled_plugins[self.disabled_plugins.index(plugin_name)]
         bot = self.modules[module_name].Bot(self.dispatcher)
         self.plugins[plugin_name] = bot
 
