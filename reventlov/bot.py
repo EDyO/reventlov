@@ -54,12 +54,12 @@ class Bot(object):
 
     @property
     def help_message(self):
-        msg = 'I am offering the following:'
-        msg += f'\n-/start: Greeting and list of features provided.'
-        msg += f'\n-/help: Help about my features.'
-        msg += f'\n-/settings: View my settings.'
-        msg += f'\n-/enable\_plugin: `plugin_name` Enable `plugin_name`'
-        msg += f'\n-/disable\_plugin: `plugin_name` Disable `plugin_name`'
+        msg = 'I am offering the following:' \
+              f'\n-/start: Greeting and list of features provided.' \
+              f'\n-/help: Help about my features.' \
+              f'\n-/settings: View my settings.' \
+              f'\n-/enable\_plugin: `plugin_name` Enable `plugin_name`' \
+              f'\n-/disable\_plugin: `plugin_name` Disable `plugin_name`'
         for command, message in self.plugins.command_descs.items():
             msg = f'{msg}\n-{command}: {message}'
         return msg
@@ -104,9 +104,9 @@ class Bot(object):
 
         These settings can include loaded plugins' settings.
         '''
-        msg = 'Here is a list of my settings:'
-        msg = f'{msg}\n- `enabled_plugins`: {self.enabled_plugins}'
-        msg = f'{msg}\n- `disabled_plugins`: {self.disabled_plugins}'
+        msg = 'Here is a list of my settings:' \
+              f'\n- `enabled_plugins`: {self.enabled_plugins}' \
+              f'\n- `disabled_plugins`: {self.disabled_plugins}'
         bot.send_message(
             chat_id=update.message.chat_id,
             text=msg,
