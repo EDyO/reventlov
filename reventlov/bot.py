@@ -1,4 +1,3 @@
-from future.utils import iteritems
 import os
 import logging
 
@@ -61,7 +60,7 @@ class Bot(object):
         msg += f'\n-/settings: View my settings.'
         msg += f'\n-/enable\_plugin: `plugin_name` Enable `plugin_name`'
         msg += f'\n-/disable\_plugin: `plugin_name` Disable `plugin_name`'
-        for command, message in iteritems(self.plugins.command_descs):
+        for command, message in self.plugins.command_descs.items():
             msg = f'{msg}\n-{command}: {message}'
         return msg
 

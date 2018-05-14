@@ -1,4 +1,3 @@
-from future.utils import iteritems
 import os
 import logging
 import importlib
@@ -53,7 +52,7 @@ class BotPlugins(object):
     @property
     def command_descs(self):
         command_help = {}
-        for _, plugin in iteritems(self.plugins):
+        for _, plugin in self.plugins.items():
             for handler in plugin.commands:
                 command = f'/{handler.command[0]}'.replace('_', '\_')
                 if handler.callback.__doc__ is None:
