@@ -2,29 +2,48 @@ import logging
 
 from telegram.ext import CommandHandler
 
+version = '0.0.1'
 logger = logging.getLogger(__name__)
+logger.info(f'Pomodoro module v{version} loaded')
 
 
 class Bot(object):
+    '''
+    I can manage pomodoro alarms for you
+    '''
     def __init__(self, dispatcher):
-        dispatcher.add_handler(CommandHandler(
-            'set',
-            self.set_timer,
-            pass_args=True,
-            pass_job_queue=True,
-            pass_chat_data=True,
-        ))
-        dispatcher.add_handler(CommandHandler(
-            'unset',
-            self.unset_timer,
-            pass_chat_data=True,
-        ))
-        self.version = '0.0.1'
-        logger.info(f'Pomodoro plugin v{self.version} loaded')
+        self.handlers = [
+            CommandHandler(
+                'set',
+                self.set_timer,
+                pass_args=True,
+                pass_job_queue=True,
+                pass_chat_data=True,
+            ),
+            CommandHandler(
+                'unset',
+                self.unset_timer,
+                pass_chat_data=True,
+            )
+        ]
+        self.add_handlers(dispatcher)
+        logger.info(f'Pomodoro plugin v{version} enabled')
 
     @property
-    def feature_desc(self):
-        return 'I can manage pomodoro alarms for you'
+    def commands(self):
+        return [
+            handler
+            for handler in self.handlers
+            if handler.__class__ == CommandHandler
+        ]
+
+    def add_handlers(self, dispatcher):
+        for handler in self.handlers:
+            dispatcher.add_handler(handler)
+
+    def remove_handlers(self, dispatcher):
+        for handler in self.handlers:
+            dispatcher.remove_handler(handler)
 
     def alarm(self, bot, job):
         bot.send_message(job.context['chat_id'], text=job.context['text'])

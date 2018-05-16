@@ -4,7 +4,7 @@ import logging
 from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler
 
-from reventlov.plugins import get_plugins
+from reventlov.bot_plugins import BotPlugins
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,17 @@ class Bot(object):
         self.dispatcher.add_handler(CommandHandler('start', self.start))
         self.dispatcher.add_handler(CommandHandler('help', self.help))
         self.dispatcher.add_handler(CommandHandler('settings', self.settings))
-        self.plugins = get_plugins(self.dispatcher)
+        self.dispatcher.add_handler(CommandHandler(
+            'enable_plugin',
+            self.enable_plugin,
+            pass_args=True,
+        ))
+        self.dispatcher.add_handler(CommandHandler(
+            'disable_plugin',
+            self.disable_plugin,
+            pass_args=True,
+        ))
+        self.plugins = BotPlugins(self.dispatcher)
 
     @property
     def name(self):
@@ -37,49 +47,34 @@ class Bot(object):
     def start_message(self):
         msg = f'I am {self.name} (@{self.username})'
         features_msg = ''
-        for plugin in self.plugins:
-            feature_desc = self.plugins[plugin].feature_desc
+        for feature_desc in self.plugins.feature_descs:
             features_msg = f'{features_msg}\n- {feature_desc}'
-        if len(features_msg) > 0:
-            msg = f'{msg}{features_msg}'
+        msg += features_msg
         return msg
 
     @property
     def help_message(self):
-        msg = 'I am offering the following:'
-        for handler in self.dispatcher.handlers[0]:
-            if handler.__class__ == CommandHandler:
-                help_msg = handler.callback.__doc__ or '\nUndefined command'
-                help_header = help_msg.splitlines()[1].strip()
-                cmd = handler.command[0]
-                handler_msg = f'- /{cmd}: {help_header}'
-            else:
-                handler_msg = 'Undefined message'
-            msg = f'{msg}\n{handler_msg}'.replace('_', '\_')
+        msg = 'I am offering the following:' \
+              f'\n-/start: Greeting and list of features provided.' \
+              f'\n-/help: Help about my features.' \
+              f'\n-/settings: View my settings.' \
+              f'\n-/enable\_plugin: `plugin_name` Enable `plugin_name`' \
+              f'\n-/disable\_plugin: `plugin_name` Disable `plugin_name`'
+        for command, message in self.plugins.command_descs.items():
+            msg = f'{msg}\n-{command}: {message}'
         return msg
 
     @property
     def disabled_plugins(self):
-        return ', '.join(sorted(
-            [name for name in self.plugins if self.plugins[name] is None]
-        ))
+        return ', '.join(sorted(self.plugins.disabled_plugins))
 
     @property
     def enabled_plugins(self):
-        return ', '.join(sorted(
-            [name for name in self.plugins if self.plugins[name]]
-        ))
-
-    @property
-    def settings_message(self):
-        msg = 'Here is a list of my settings:'
-        msg = f'{msg}\n- `enabled_plugins`: {self.enabled_plugins}'
-        msg = f'{msg}\n- `disabled_plugins`: {self.disabled_plugins}'
-        return msg
+        return ', '.join(sorted(self.plugins.enabled_plugins))
 
     def start(self, bot, update):
         '''
-        Greet and list of features I am providing.
+        Greeting and list of features I am providing.
 
         The list of features are including the feature descriptions of all
         the plugins loaded.
@@ -105,14 +100,57 @@ class Bot(object):
 
     def settings(self, bot, update):
         '''
-        List my settings.
+        View my settings.
 
         These settings can include loaded plugins' settings.
         '''
+        msg = 'Here is a list of my settings:' \
+              f'\n- `enabled_plugins`: {self.enabled_plugins}' \
+              f'\n- `disabled_plugins`: {self.disabled_plugins}'
         bot.send_message(
             chat_id=update.message.chat_id,
-            text=self.settings_message,
+            text=msg,
             parse_mode=ParseMode.MARKDOWN,
+        )
+
+    def enable_plugin(self, bot, update, args):
+        '''
+        Enable a disabled plugin
+
+        Enable one of the disabled plugins.
+        '''
+        msg = ''
+        if len(args) == 1:
+            if args[0] in self.disabled_plugins:
+                self.plugins.enable(args[0])
+                msg = f'Plugin {args[0]} enabled'
+            else:
+                msg = f'Plugin {args[0]} is not disabled'
+        else:
+            msg = 'You must specify which plugin you want to enable'
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text=msg,
+        )
+
+    def disable_plugin(self, bot, update, args):
+        '''
+        Disable an enabled plugin
+
+        Disable one of the enable plugins.
+        '''
+        msg = ''
+        if len(args) == 1:
+            if args[0] in self.enabled_plugins:
+                self.plugins.disable(args[0])
+                msg = f'Plugin {args[0]} disabled'
+            else:
+                msg = f'Plugin {args[0]} is not enabled'
+        else:
+            msg = 'You must specify which plugin you want to disable'
+        bot.send_message(
+            chat_id=update.message.chat_id,
+            text=msg,
         )
 
     def run(self):
