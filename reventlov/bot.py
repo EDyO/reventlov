@@ -4,7 +4,7 @@ import logging
 from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler
 
-from reventlov.bot_plugins import BotPlugins
+from reventlov.bot_plugins import BotPlugins, get_list_from_environment
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class Bot(object):
     def __init__(self):
         self.updater = Updater(token=os.getenv('TELEGRAM_BOT_TOKEN'))
+        self.admins = get_list_from_environment('TELEGRAM_BOT_ADMINS')
         self.dispatcher.add_handler(CommandHandler('start', self.start))
         self.dispatcher.add_handler(CommandHandler('help', self.help))
         self.dispatcher.add_handler(CommandHandler('settings', self.settings))
@@ -120,14 +121,17 @@ class Bot(object):
         Enable one of the disabled plugins.
         '''
         msg = ''
-        if len(args) == 1:
-            if args[0] in self.disabled_plugins:
-                self.plugins.enable(args[0])
-                msg = f'Plugin {args[0]} enabled'
+        if update.message.from_user.username in self.admins:
+            if len(args) == 1:
+                if args[0] in self.disabled_plugins:
+                    self.plugins.enable(args[0])
+                    msg = f'Plugin {args[0]} enabled'
+                else:
+                    msg = f'Plugin {args[0]} is not disabled'
             else:
-                msg = f'Plugin {args[0]} is not disabled'
+                msg = 'You must specify which plugin you want to enable'
         else:
-            msg = 'You must specify which plugin you want to enable'
+            msg = 'You must be admin to enable plugins'
         bot.send_message(
             chat_id=update.message.chat_id,
             text=msg,
@@ -140,14 +144,17 @@ class Bot(object):
         Disable one of the enable plugins.
         '''
         msg = ''
-        if len(args) == 1:
-            if args[0] in self.enabled_plugins:
-                self.plugins.disable(args[0])
-                msg = f'Plugin {args[0]} disabled'
+        if update.message.from_user.username in self.admins:
+            if len(args) == 1:
+                if args[0] in self.enabled_plugins:
+                    self.plugins.disable(args[0])
+                    msg = f'Plugin {args[0]} disabled'
+                else:
+                    msg = f'Plugin {args[0]} is not enabled'
             else:
-                msg = f'Plugin {args[0]} is not enabled'
+                msg = 'You must specify which plugin you want to disable'
         else:
-            msg = 'You must specify which plugin you want to disable'
+            msg = 'You must be admin to enable plugins'
         bot.send_message(
             chat_id=update.message.chat_id,
             text=msg,
