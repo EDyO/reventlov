@@ -58,9 +58,18 @@ class Bot(object):
         msg = 'I am offering the following:' \
               f'\n-/start: Greeting and list of features provided.' \
               f'\n-/help: Help about my features.' \
-              f'\n-/settings: View my settings.' \
-              f'\n-/enable\_plugin: `plugin_name` Enable `plugin_name`' \
+              f'\n-/settings: View my settings.'
+        return msg
+
+    @property
+    def admin_help_message(self):
+        msg = f'\n-/enable\_plugin: `plugin_name` Enable `plugin_name`' \
               f'\n-/disable\_plugin: `plugin_name` Disable `plugin_name`'
+        return msg
+
+    @property
+    def plugin_help_messages(self):
+        msg = ''
         for command, message in self.plugins.command_descs.items():
             msg = f'{msg}\n-{command}: {message}'
         return msg
@@ -93,9 +102,13 @@ class Bot(object):
         The list might include many different kinds of help text from all the
         different plugins loaded.
         '''
+        msg = self.help_message
+        if update.message.from_user.username in self.admins:
+            msg += self.admin_help_message
+        msg += self.plugin_help_messages
         bot.send_message(
             chat_id=update.message.chat_id,
-            text=self.help_message,
+            text=msg,
             parse_mode=ParseMode.MARKDOWN,
         )
 
