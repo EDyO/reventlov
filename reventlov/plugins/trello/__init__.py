@@ -87,6 +87,7 @@ class TrelloPlugin(BotPlugin):
         Object type depends on first argument:
           - `orgs`: List organizations.
           - `boards`: List boards.
+          - `board_name`: List lists in `board_name`.
         By default it lists organizations.
         '''
         msg = ''
@@ -97,18 +98,24 @@ class TrelloPlugin(BotPlugin):
                     else f'- {org_name}'
                     for org_name in self.org_names
                 ])
-                msg += '\n\nYou can specify either one of: `orgs`, or `boards`'
+                msg += '\n\nYou can specify either one of: `orgs`, `boards`, ' \
+                       'or use a `board_name` to list lists'
             elif args[0] == 'boards':
                 msg = '\n'.join([
                     f'- {board_name}'
                     for board_name in self.board_names
                 ])
+                msg += "\n\nBy specifying a `board_name` you will get a list " \
+                       "of board's lists"
             elif args[0] in self.board_names:
                 board = self.get_board(args[0])
-                msg = '\n'.join([
-                    f'- {card_list.name}'
-                    for card_list in board.open_lists()
-                ])
+                if board is not None:
+                    msg = '\n'.join([
+                        f'- {card_list.name}'
+                        for card_list in board.open_lists()
+                    ])
+                else:
+                    msg = f'No such board `{args[0]}`'
         else:
             msg = 'You must be admin to enable plugins'
         bot.send_message(
