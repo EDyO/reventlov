@@ -2,12 +2,14 @@ import logging
 
 from telegram.ext import CommandHandler
 
+from reventlov.bot_plugin import BotPlugin
+
 version = '0.0.1'
 logger = logging.getLogger(__name__)
 logger.info(f'Pomodoro module v{version} loaded')
 
 
-class Bot(object):
+class PomodoroPlugin(BotPlugin):
     '''
     I can manage pomodoro alarms for you
     '''
@@ -28,22 +30,6 @@ class Bot(object):
         ]
         self.add_handlers(dispatcher)
         logger.info(f'Pomodoro plugin v{version} enabled')
-
-    @property
-    def commands(self):
-        return [
-            handler
-            for handler in self.handlers
-            if handler.__class__ == CommandHandler
-        ]
-
-    def add_handlers(self, dispatcher):
-        for handler in self.handlers:
-            dispatcher.add_handler(handler)
-
-    def remove_handlers(self, dispatcher):
-        for handler in self.handlers:
-            dispatcher.remove_handler(handler)
 
     def alarm(self, bot, job):
         bot.send_message(job.context['chat_id'], text=job.context['text'])
