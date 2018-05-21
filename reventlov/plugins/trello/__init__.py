@@ -72,6 +72,14 @@ class TrelloPlugin(BotPlugin):
     def board_names(self):
         return [board.name for board in self.boards]
 
+    def get_board(self, board_name):
+        board_found = None
+        for board in self.boards:
+            if board.name == board_name:
+                board_found = board
+                break
+        return board_found
+
     def list_objects(self, bot, update, args):
         '''
         List objects visible to me.
@@ -94,6 +102,12 @@ class TrelloPlugin(BotPlugin):
                 msg = '\n'.join([
                     f'- {board_name}'
                     for board_name in self.board_names
+                ])
+            elif args[0] in self.board_names:
+                board = self.get_board(args[0])
+                msg = '\n'.join([
+                    f'- {list_name}'
+                    for list_name in board.open_lists()
                 ])
         else:
             msg = 'You must be admin to enable plugins'
