@@ -3,7 +3,20 @@ import logging
 import importlib
 import pkgutil
 
+from reventlov.bot_plugin import BotPlugin
+
 logger = logging.getLogger(__name__)
+
+
+def find_bot(module):
+    bot_class = None
+    for attr_name in dir(module):
+        if attr_name != 'BotPlugin':
+            attr = getattr(module, attr_name)
+            if type(attr) == type and issubclass(attr, BotPlugin):
+                bot_class = attr
+                break
+    return bot_class
 
 
 def get_list_from_environment(env_var_name):
@@ -78,19 +91,25 @@ class BotPlugins(object):
         del self.plugins[plugin_name]
         self.disabled_plugins.append(plugin_name)
 
+    def load_plugin(self, module_name):
+        plugin_name = module_name.split('.')[-1]
+        bot_class = find_bot(self.modules[module_name])
+        if bot_class is None:
+            logger.warning(f'No BotPlugin subclass found for {module_name}')
+        else:
+            bot = bot_class(self.dispatcher)
+            self.plugins[plugin_name] = bot
+
     def enable(self, plugin_name):
         module_name = f'reventlov.plugins.{plugin_name}'
         del self.disabled_plugins[self.disabled_plugins.index(plugin_name)]
-        bot = self.modules[module_name].Bot(self.dispatcher)
-        self.plugins[plugin_name] = bot
+        self.load_plugin(module_name)
 
     def load_plugins(self):
-        for name in self.modules:
-            plugin_name = name.split('.')[-1]
-            if plugin_name not in self.disabled_plugins \
-               and 'Bot' in dir(self.modules[name]):
-                bot = self.modules[name].Bot(self.dispatcher)
-                self.plugins[plugin_name] = bot
+        for module_name in self.modules:
+            plugin_name = module_name.split('.')[-1]
+            if plugin_name not in self.disabled_plugins:
+                self.load_plugin(module_name)
 
     def __iter__(self):
         return self.plugins.__iter__()

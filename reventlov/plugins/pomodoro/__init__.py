@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.info(f'Pomodoro module v{version} loaded')
 
 
-class Bot(BotPlugin):
+class PomodoroPlugin(BotPlugin):
     '''
     I can manage pomodoro alarms for you
     '''
