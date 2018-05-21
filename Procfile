@@ -1,0 +1,1 @@
+app: ./bin/main.py
