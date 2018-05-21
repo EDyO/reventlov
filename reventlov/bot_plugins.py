@@ -6,6 +6,13 @@ import pkgutil
 logger = logging.getLogger(__name__)
 
 
+def get_list_from_environment(env_var_name):
+    env_var_value = os.getenv(env_var_name)
+    if env_var_value is None:
+        return []
+    return env_var_value.split(',')
+
+
 def iter_namespaces():
     return pkgutil.iter_modules(
         [os.path.join(os.path.dirname(__file__), 'plugins')],
@@ -36,11 +43,9 @@ class BotPlugins(object):
 
     def __disabled_plugins(self, disabled_plugins=None):
         if disabled_plugins is None:
-            disabled_plugins = os.getenv('REVENTLOV_DISABLED_PLUGINS')
-            if disabled_plugins is None:
-                self.__disabled_plugins = []
-            else:
-                self.__disabled_plugins = disabled_plugins.split(',')
+            self.__disabled_plugins = get_list_from_environment(
+                'REVENTLOV_DISABLED_PLUGINS',
+            )
         else:
             self.__disabled_plugins = disabled_plugins
 
