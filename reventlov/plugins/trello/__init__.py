@@ -106,8 +106,8 @@ class TrelloPlugin(BotPlugin):
             elif args[0] in self.board_names:
                 board = self.get_board(args[0])
                 msg = '\n'.join([
-                    f'- {list_name}'
-                    for list_name in board.open_lists()
+                    f'- {card_list.name}'
+                    for card_list in board.open_lists()
                 ])
         else:
             msg = 'You must be admin to enable plugins'
