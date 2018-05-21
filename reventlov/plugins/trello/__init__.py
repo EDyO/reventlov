@@ -5,7 +5,8 @@ from telegram import ParseMode
 from telegram.ext import CommandHandler
 from trello import TrelloClient
 
-from reventlov.bot_plugin import BotPlugin, get_list_from_environment
+from reventlov.bot_plugins import get_list_from_environment
+from reventlov.bot_plugin import BotPlugin
 
 version = '0.0.1'
 logger = logging.getLogger(__name__)
