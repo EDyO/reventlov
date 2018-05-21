@@ -114,8 +114,8 @@ class TrelloPlugin(BotPlugin):
                         f'- {card_list.name}'
                         for card_list in board.open_lists()
                     ])
-                else:
-                    msg = f'No such board `{args[0]}`'
+            else:
+                msg = f'No such board `{args[0]}`'
         else:
             msg = 'You must be admin to enable plugins'
         bot.send_message(
