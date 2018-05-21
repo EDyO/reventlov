@@ -5,7 +5,7 @@ from telegram import ParseMode
 from telegram.ext import CommandHandler
 from trello import TrelloClient
 
-from reventlov.bot_plugin import BotPlugin
+from reventlov.bot_plugin import BotPlugin, get_list_from_environment
 
 version = '0.0.1'
 logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ class TrelloPlugin(BotPlugin):
             api_secret=os.getenv('TRELLO_API_SECRET'),
             token=os.getenv('TRELLO_API_TOKEN'),
         )
+        self.admins = get_list_from_environment('TRELLO_ADMINS')
         self.load_orgs()
         self.__boards = []
         self.handlers = [
@@ -80,18 +81,21 @@ class TrelloPlugin(BotPlugin):
         By default it lists organizations.
         '''
         msg = ''
-        if len(args) < 1 or args[0] == 'orgs':
-            msg = '\n'.join([
-                f'- *{org_name}*' if org_name == self.organization.name
-                else f'- {org_name}'
-                for org_name in self.org_names
-            ])
-            msg += '\n\nYou can specify either one of: `orgs`, or `boards`'
-        elif args[0] == 'boards':
-            msg = '\n'.join([
-                f'- {board_name}'
-                for board_name in self.board_names
-            ])
+        if update.message.from_user.username in self.admins:
+            if len(args) < 1 or args[0] == 'orgs':
+                msg = '\n'.join([
+                    f'- *{org_name}*' if org_name == self.organization.name
+                    else f'- {org_name}'
+                    for org_name in self.org_names
+                ])
+                msg += '\n\nYou can specify either one of: `orgs`, or `boards`'
+            elif args[0] == 'boards':
+                msg = '\n'.join([
+                    f'- {board_name}'
+                    for board_name in self.board_names
+                ])
+        else:
+            msg = 'You must be admin to enable plugins'
         bot.send_message(
             chat_id=update.message.chat_id,
             text=msg,
