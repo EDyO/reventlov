@@ -80,46 +80,67 @@ class TrelloPlugin(BotPlugin):
                 break
         return board_found
 
+    def list_orgs(self):
+        msg = '\n'.join([
+            f'- *{org_name}*' if org_name == self.organization.name
+            else f'- {org_name}'
+            for org_name in self.org_names
+        ])
+        return msg, ParseMode.MARKDOWN
+
+    def list_boards(self):
+        msg = '\n'.join([
+            f'- {board_name}'
+            for board_name in self.board_names
+        ])
+        return msg, ParseMode.MARKDOWN
+
+    def list_column_cards(self, column):
+        msg = '\n'.join([
+            f'    + {card.name}'
+            for card in column.list_cards()
+        ])
+        return msg
+
+    def list_board_columns(self, board_name):
+        msg = f'No such board `{board_name}`'
+        board = self.get_board(board_name)
+        if board is not None:
+            msg = '\n'.join([
+                f'- {column.name} ({column.cardsCnt()} cards) '
+                f'\n{self.list_column_cards(column)}'.strip()
+                for column in board.open_lists()
+            ])
+        return msg, ParseMode.HTML
+
     def list_objects(self, bot, update, args):
         '''
-        List objects visible to me.
+        List Trello objects visible to me.
 
         Object type depends on first argument:
           - `orgs`: List organizations.
           - `boards`: List boards.
-          - `board_name`: List lists in `board_name`.
+          - `board_name`: List cards in `board_name`.
         By default it lists organizations.
         '''
         msg = ''
+        parse_mode = None
         if update.message.from_user.username in self.admins:
             if len(args) < 1 or args[0] == 'orgs':
-                msg = '\n'.join([
-                    f'- *{org_name}*' if org_name == self.organization.name
-                    else f'- {org_name}'
-                    for org_name in self.org_names
-                ])
-                msg += '\n\nYou can specify either one of: `orgs`, `boards`, ' \
-                       'or use a `board_name` to list lists'
+                msg, parse_mode = self.list_orgs()
             elif args[0] == 'boards':
-                msg = '\n'.join([
-                    f'- {board_name}'
-                    for board_name in self.board_names
-                ])
-                msg += "\n\nBy specifying a `board_name` you will get a list " \
-                       "of board's lists"
+                msg, parse_mode = self.list_boards()
             elif args[0] in self.board_names:
-                board = self.get_board(args[0])
-                if board is not None:
-                    msg = '\n'.join([
-                        f'- {card_list.name}'
-                        for card_list in board.open_lists()
-                    ])
+                msg, parse_mode = self.list_board_columns(args[0])
             else:
                 msg = f'No such board `{args[0]}`'
+                parse_mode = ParseMode.MARKDOWN
+            msg += '\n\nYou can specify either one of: `orgs`, `boards`, ' \
+                   'or use a `board_name` to list its cards'
         else:
-            msg = 'You must be admin to enable plugins'
+            msg = 'You must be admin to list Trello objects'
         bot.send_message(
             chat_id=update.message.chat_id,
             text=msg,
-            parse_mode=ParseMode.MARKDOWN,
+            parse_mode=parse_mode,
         )
