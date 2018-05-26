@@ -1,0 +1,11 @@
+sudo: false
+language: python
+python:
+  - "3.6"
+install:
+  - pip install pipenv --upgrade
+  - pipenv install --three --dev --skip-lock
+script:
+  - pipenv run pycodestyle .
+  - pipenv run flake8 .
+  - pipenv run pytest --verbose
