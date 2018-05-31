@@ -167,3 +167,8 @@ def test_bot(mocker, environ, present_plugins, feature_descs, expected):
     for feature_desc in feature_descs:
         start_text = f'{start_text}\n- {feature_desc}'
     assert start_text == bot.start_message
+    help_msg = bot.help_message
+    assert len(help_msg.splitlines()) == 4
+    assert '-/start' in help_msg
+    assert '-/help' in help_msg
+    assert '-/settings' in help_msg
