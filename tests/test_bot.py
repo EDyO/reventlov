@@ -172,3 +172,7 @@ def test_bot(mocker, environ, present_plugins, feature_descs, expected):
     assert '-/start' in help_msg
     assert '-/help' in help_msg
     assert '-/settings' in help_msg
+    admin_help_msg = bot.admin_help_message
+    assert len(admin_help_msg.splitlines()) == 3
+    assert '-/enable\_plugin' in admin_help_msg
+    assert '-/disable\_plugin' in admin_help_msg
