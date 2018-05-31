@@ -20,7 +20,9 @@ basic_commands = [
     'enable_plugin',
 ]
 pomodoro_plugin = 'pomodoro'
+pomodoro_feature_desc = 'I can handle alarms'
 trello_plugin = 'trello'
+trello_feature_desc = 'I can handle Trello cards'
 bot_test_cases = {
     'tests': [
         (
@@ -28,6 +30,7 @@ bot_test_cases = {
                 'TELEGRAM_BOT_TOKEN': example_bot_token,
                 'TELEGRAM_BOT_ADMINS': empty_bot_admins_env_value,
             },
+            [],
             [],
             {
                 'admins': [''],
@@ -41,6 +44,7 @@ bot_test_cases = {
                 'TELEGRAM_BOT_ADMINS': single_bot_admin_env_value,
             },
             [pomodoro_plugin],
+            [pomodoro_feature_desc],
             {
                 'admins': ['my_telegram_username'],
                 'commands': basic_commands,
@@ -53,6 +57,7 @@ bot_test_cases = {
                 'TELEGRAM_BOT_ADMINS': multiple_bot_admins_env_value,
             },
             [pomodoro_plugin],
+            [pomodoro_feature_desc],
             {
                 'admins': many_admins,
                 'commands': basic_commands,
@@ -65,6 +70,7 @@ bot_test_cases = {
                 'TELEGRAM_BOT_ADMINS': multiple_bot_admins_env_value,
             },
             [pomodoro_plugin, trello_plugin],
+            [pomodoro_feature_desc, trello_feature_desc],
             {
                 'admins': many_admins,
                 'commands': basic_commands,
@@ -122,11 +128,11 @@ class Logger(object):
 
 
 @pytest.mark.parametrize(
-    'environ, present_plugins, expected',
+    'environ, present_plugins, feature_descs, expected',
     bot_test_cases['tests'],
     ids=bot_test_cases['ids'],
 )
-def test_bot(mocker, environ, present_plugins, expected):
+def test_bot(mocker, environ, present_plugins, feature_descs, expected):
     mocker.patch.dict(os.environ, environ)
     mocker.patch(
         'reventlov.bot.Updater',
@@ -136,6 +142,7 @@ def test_bot(mocker, environ, present_plugins, expected):
         'reventlov.bot.BotPlugins',
         spec=True,
         enabled_plugins=present_plugins,
+        feature_descs=feature_descs,
     )
     logger = Logger()
     mocker.patch(
@@ -154,4 +161,9 @@ def test_bot(mocker, environ, present_plugins, expected):
     bot_plugins.assert_called_once_with(bot.dispatcher)
     assert bot.enabled_plugins == expected['enabled_plugins']
     assert bot.updater.polling
-    assert 'I am R. Giskard Reventlov (@reventlovbot)' in logger.messages
+    greeting = 'I am R. Giskard Reventlov (@reventlovbot)'
+    assert greeting in logger.messages
+    start_text = f'{greeting}'
+    for feature_desc in feature_descs:
+        start_text = f'{start_text}\n- {feature_desc}'
+    assert start_text == bot.start_message
