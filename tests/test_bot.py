@@ -32,10 +32,12 @@ bot_test_cases = {
             },
             [],
             [],
+            {},
             {
                 'admins': [''],
                 'commands': basic_commands,
                 'enabled_plugins': '',
+                'plugin_help_messages': '',
             },
         ),
         (
@@ -45,10 +47,12 @@ bot_test_cases = {
             },
             [pomodoro_plugin],
             [pomodoro_feature_desc],
+            {'/set': 'Set alarms'},
             {
                 'admins': ['my_telegram_username'],
                 'commands': basic_commands,
                 'enabled_plugins': 'pomodoro',
+                'plugin_help_messages': '\n-/set: Set alarms',
             },
         ),
         (
@@ -58,10 +62,12 @@ bot_test_cases = {
             },
             [pomodoro_plugin],
             [pomodoro_feature_desc],
+            {'/set': 'Set alarms'},
             {
                 'admins': many_admins,
                 'commands': basic_commands,
                 'enabled_plugins': pomodoro_plugin,
+                'plugin_help_messages': '\n-/set: Set alarms',
             },
         ),
         (
@@ -72,9 +78,15 @@ bot_test_cases = {
             [pomodoro_plugin, trello_plugin],
             [pomodoro_feature_desc, trello_feature_desc],
             {
+                '/set': 'Set alarms',
+                '/list': 'List Trello boards',
+            },
+            {
                 'admins': many_admins,
                 'commands': basic_commands,
                 'enabled_plugins': 'pomodoro, trello',
+                'plugin_help_messages': '\n-/set: Set alarms'
+                                        '\n-/list: List Trello boards',
             },
         ),
     ],
@@ -128,11 +140,18 @@ class Logger(object):
 
 
 @pytest.mark.parametrize(
-    'environ, present_plugins, feature_descs, expected',
+    'environ, present_plugins, feature_descs, command_descs, expected',
     bot_test_cases['tests'],
     ids=bot_test_cases['ids'],
 )
-def test_bot(mocker, environ, present_plugins, feature_descs, expected):
+def test_bot(
+        mocker,
+        environ,
+        present_plugins,
+        feature_descs,
+        command_descs,
+        expected,
+):
     mocker.patch.dict(os.environ, environ)
     mocker.patch(
         'reventlov.bot.Updater',
@@ -143,6 +162,7 @@ def test_bot(mocker, environ, present_plugins, feature_descs, expected):
         spec=True,
         enabled_plugins=present_plugins,
         feature_descs=feature_descs,
+        command_descs=command_descs,
     )
     logger = Logger()
     mocker.patch(
@@ -176,3 +196,4 @@ def test_bot(mocker, environ, present_plugins, feature_descs, expected):
     assert len(admin_help_msg.splitlines()) == 3
     assert '-/enable\_plugin' in admin_help_msg
     assert '-/disable\_plugin' in admin_help_msg
+    assert bot.plugin_help_messages == expected['plugin_help_messages']
