@@ -23,6 +23,7 @@ pomodoro_plugin = 'pomodoro'
 pomodoro_feature_desc = 'I can handle alarms'
 trello_plugin = 'trello'
 trello_feature_desc = 'I can handle Trello cards'
+plugin_list = [pomodoro_plugin, trello_plugin]
 bot_test_cases = {
     'tests': [
         (
@@ -37,6 +38,7 @@ bot_test_cases = {
                 'admins': [''],
                 'commands': basic_commands,
                 'enabled_plugins': '',
+                'disabled_plugins': 'pomodoro, trello',
                 'plugin_help_messages': '',
             },
         ),
@@ -52,6 +54,7 @@ bot_test_cases = {
                 'admins': ['my_telegram_username'],
                 'commands': basic_commands,
                 'enabled_plugins': 'pomodoro',
+                'disabled_plugins': 'trello',
                 'plugin_help_messages': '\n-/set: Set alarms',
             },
         ),
@@ -67,6 +70,7 @@ bot_test_cases = {
                 'admins': many_admins,
                 'commands': basic_commands,
                 'enabled_plugins': pomodoro_plugin,
+                'disabled_plugins': 'trello',
                 'plugin_help_messages': '\n-/set: Set alarms',
             },
         ),
@@ -85,6 +89,7 @@ bot_test_cases = {
                 'admins': many_admins,
                 'commands': basic_commands,
                 'enabled_plugins': 'pomodoro, trello',
+                'disabled_plugins': '',
                 'plugin_help_messages': '\n-/set: Set alarms'
                                         '\n-/list: List Trello boards',
             },
@@ -161,6 +166,11 @@ def test_bot(
         'reventlov.bot.BotPlugins',
         spec=True,
         enabled_plugins=present_plugins,
+        disabled_plugins=[
+            plugin
+            for plugin in plugin_list
+            if plugin not in present_plugins
+        ],
         feature_descs=feature_descs,
         command_descs=command_descs,
     )
